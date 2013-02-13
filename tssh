@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 # This script emulates cssh (see http://sourceforge.net/projects/clusterssh/)
 # using tmux panes.  It must be run from within a tmux session.
 
