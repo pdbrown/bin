@@ -9,12 +9,12 @@
 #     bind e set-window-option synchronize-panes
 
 if [ "$#" -lt 1 ]; then
-        echo "Usage: $(basename $0) hostname [hostname ...]"
-        exit 1
+	echo "Usage: $(basename $0) hostname [hostname ...]"
+	exit 1
 fi
 if [ -z "$TMUX" ]; then
-        echo "Error: $(basename $0) must be run from within a tmux session."
-        exit 1
+	echo "Error: $(basename $0) must be run from within a tmux session."
+	exit 1
 fi
 
 FIRST_HOST="$1"
@@ -22,10 +22,11 @@ shift
 
 # Split panes and ssh to remaining hosts
 for HOST in "$@"; do
-        tmux splitw "ssh $HOST"
+	tmux splitw "ssh $HOST"
+	# change layout each time to keep split pane from getting to small
+	tmux select-layout tiled
 done
 
-tmux select-layout tiled
 tmux set-window-option synchronize-panes on
 
 # And shh to first host in this pane
