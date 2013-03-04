@@ -1,6 +1,8 @@
 import sys
 import os
 
+POWER_METER_LENGTH = 10
+
 if len(sys.argv) < 2:
     sys.exit("Usage: %s sys_battery_subdir" % sys.argv[0])
 
@@ -18,51 +20,53 @@ with open('energy_full', 'r') as f:
 with open('status', 'r') as f:
     power_status = f.read().strip()
 
-tmux_colors = {}
-tmux_colors['red'] = '#[fg=red]'
-tmux_colors['yellow'] = '#[fg=yellow]'
-tmux_colors['green'] = '#[fg=green]'
-tmux_colors['blue'] = '#[fg=blue]'
-tmux_colors['clear'] = '#[fg=default]'
-power_meter_color = tmux_colors['green']
+def tmux_color(color_name):
+    return "#[fg=" + color_name + "]"
 
-power_meter_length = 10
+def draw_power_meter(time_str, power_level, power_tick, power_tick_minor, power_meter_color):
+    major_ticks = POWER_METER_LENGTH * power_level
+    major_ticks_draw = int(major_ticks)
+    empty_ticks = POWER_METER_LENGTH - major_ticks_draw - 1
+
+    if major_ticks % 1 > 0.5:
+        power_tick_minor = power_tick
+
+    power_meter = power_tick * major_ticks_draw
+    power_meter += power_tick_minor
+    power_meter += " " * empty_ticks
+    print "%s [%s%s%s]" % (time_str, power_meter_color, power_meter, tmux_color('default'))
+
+# time string from positive float hours
+def get_time_str(hours_float):
+    hours_fpart = hours_float % 1
+    return "%d:%02d" % (int(hours_float), int(hours_fpart * 60))
 
 try:
-    remaining = energy_now / energy_full
+    if power_status == "Full":
+        on_ac = " AC "
+        padding = "=" * ((POWER_METER_LENGTH - len(on_ac))/ 2)
+        print "[%s%s%s]" % (padding, on_ac, padding)
+        sys.exit(0)
+
+    power_remain = energy_now / energy_full
 
     if power_status == "Charging":
-        power_tick = ">"
-        sub_power_tick = ">"
         hours_remain = (energy_full - energy_now) / power_now
-        power_meter_color = tmux_colors['blue']
-        hours_remain_ipart = -int(hours_remain)
-    else:
-        power_tick = "="
-        sub_power_tick = "-"
+        draw_power_meter("-" + get_time_str(hours_remain), power_remain, ">", "-", tmux_color('blue'))
+    elif power_status == "Discharging":
         hours_remain = energy_now / power_now
-        if remaining < 0.5:
-            power_meter_color = tmux_colors['yellow']
-        if remaining < 0.25:
-            power_meter_color = tmux_colors['red']
-        hours_remain_ipart = int(hours_remain)
-
-    hours_remain_fpart = hours_remain % 1
-    minutes_of_last_hour = int(hours_remain_fpart * 60)
-
-    power_ticks = int(power_meter_length * remaining)
-    empty_ticks = power_meter_length - power_ticks
-    if (power_meter_length * remaining) % 1 < 0.5:
-        power_ticks -= 1
-        sub_power_tick_insert = sub_power_tick
+        if power_remain < 0.1:
+            power_meter_color = 'magenta'
+        elif power_remain < 0.25:
+            power_meter_color = 'red'
+        elif power_remain < 0.5:
+            power_meter_color = 'yellow'
+        else:
+            power_meter_color = 'green'
+        draw_power_meter(get_time_str(hours_remain), power_remain, "=", "-", tmux_color(power_meter_color))
     else:
-        sub_power_tick_insert = ''
-
-    power_meter = power_tick * power_ticks
-    power_meter += sub_power_tick_insert
-    power_meter += " " * empty_ticks
-    print "%d:%02d [%s%s%s]" % (hours_remain_ipart, minutes_of_last_hour, power_meter_color, power_meter, tmux_colors['clear'])
+        print "[Unknown Power State]"
 
 except Exception as e:
-    print "xx:xx [%s]" % ("x" * power_meter_length)
+    print "xx:xx [%s]" % ("x" * POWER_METER_LENGTH)
     print e
