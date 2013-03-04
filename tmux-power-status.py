@@ -1,3 +1,6 @@
+# This script takes a battery name argument, and prints a pattery status line
+# for tmux status bar, which indicates charge level and time to (dis)charge
+
 import sys
 import os
 
