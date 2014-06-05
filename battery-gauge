@@ -1,5 +1,7 @@
+#!/usr/bin/env python
 # This script takes a battery name argument, and prints a battery gauge
 # for tmux status bar, which indicates charge level and time to (dis)charge
+# Tested on Python 3.4.1
 
 import sys
 import os
@@ -7,10 +9,10 @@ import os
 GAUGE_LENGTH = 10
 
 if len(sys.argv) < 2:
-    sys.exit("Usage: %s sys_battery_subdir" % sys.argv[0])
+    sys.exit("Usage: {} sys_battery_subdir".format(sys.argv[0]))
 
 try:
-    os.chdir('/sys/class/power_supply/%s/' % sys.argv[1])
+    os.chdir('/sys/class/power_supply/{}/'.format(sys.argv[1]))
 except OSError:
     sys.exit(1)
 
@@ -37,14 +39,14 @@ def draw_gauge(time_str, power_level, power_tick, power_tick_minor, gauge_color)
     gauge = power_tick * major_ticks_draw
     gauge += power_tick_minor
     gauge += " " * empty_ticks
-    print "%s [%s%s%s]" % (time_str, gauge_color, gauge, tmux_color('default'))
+    print("{} [{}{}{}]".format(time_str, gauge_color, gauge, tmux_color('default')))
 
 # Returns time string
 def time_to_empty(energy_remain, power_now):
     if power_now != 0:
         hours_remain = energy_remain / power_now
         hours_fpart = hours_remain % 1
-        return "%d:%02d" % (int(hours_remain), int(hours_fpart * 60))
+        return "{:d}:{:02d}".format(int(hours_remain), int(hours_fpart * 60))
     else:
         return ''
 
@@ -52,7 +54,7 @@ try:
     if power_status == "Full":
         on_ac = " AC "
         padding = "=" * ((GAUGE_LENGTH - len(on_ac))/ 2)
-        print "[%s%s%s]" % (padding, on_ac, padding)
+        print("[{}{}{}]".format(padding, on_ac, padding))
         sys.exit(0)
 
     charge_remain = energy_now / energy_full
@@ -78,8 +80,8 @@ try:
         draw_gauge(time_str, charge_remain, "=", "-", tmux_color(gauge_color))
 
     else:
-        print "[Unknown Power State]"
+        print("[Unknown Power State]")
 
 except Exception as e:
-    print "xx:xx [%s]" % ("x" * GAUGE_LENGTH)
-    print e
+    print("xx:xx [{}]".format("x" * GAUGE_LENGTH))
+    print(e)
