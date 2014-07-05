@@ -1,3 +1,4 @@
 #!/bin/bash
+amixer set Master on
 amixer set Master 5%-
 notify-send -t 400 "Volume: $(amixer -M get Master | tail -1 | awk '{print $4}')"
