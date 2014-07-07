@@ -1,0 +1,6 @@
+#!/bin/bash
+# From http://www.shredzone.de/cilla/page/374/validating-the-android-422-rsa-fingerprint.html
+
+cd "${HOME}/.android" || { echo "Error: \${HOME}/.android not found for user ${USER}"; exit 1; }
+awk '{print $1}' < adbkey.pub | openssl base64 -A -d -a | openssl md5 -c | \
+awk '{print $2}' | tr '[:lower:]' '[:upper:]'
