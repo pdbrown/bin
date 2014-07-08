@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Example invocation
+# IF=enp0s25 IP=192.168.1.3 MASK_CIDR=24 BCAST=192.168.1.255 GATEWAY=192.168.1.1 DNS_IP=8.8.8.8 ./static-ip
+
+function die {
+  echo "$0 Error: $1"
+  exit 1
+}
+
+test "${IF}" || die 'Define IF'
+test "${IP}" || die 'Define IP'
+test "${MASK_CIDR}" || die 'Define MASK_CIDR'
+test "${BCAST}" || die 'Define BCAST'
+test "${GATEWAY}" || die 'Define GATEWAY'
+test "${DNS_IP}" || die 'Define DNS_IP'
+
+sudo systemctl stop "dhcpcd@${IF}"
+old_ip="$(ip addr show "${IF}" | grep -w inet | awk '{print $2}')"
+if [[ -n "${old_ip}" ]]; then
+  sudo ip addr del "${old_ip}" dev "${IF}"
+fi
+
+sudo ip link set "${IF}" up
+sudo ip addr add "${IP}/${MASK_CIDR}" broadcast "${BCAST}" dev "${IF}"
+sudo ip route add default via "${GATEWAY}"
+sudo resolvconf -a "${IF}" <<<"nameserver ${DNS_IP}"
