@@ -1,0 +1,4 @@
+#!/bin/bash
+# xset m <acceleration> <thresh> // 0 thresh means "use natural acceleration
+# exponent
+xset m 3/1 0
