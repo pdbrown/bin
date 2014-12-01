@@ -1,4 +1,4 @@
 #!/bin/bash
 
 test $ISO || { echo "Set ISO envvar"; exit 1; }
-wodim -v -sao dev=/dev/sr0 $ISO_FILE
+wodim -v -sao dev=/dev/sr0 $ISO
