@@ -1,0 +1,18 @@
+#!/bin/bash
+# This script updates the /etc/pacman.d/mirrorlist. It chooses the 10 fastest
+# mirrors of the 30 most recent mirrors in the United States sorted by speed. 
+
+function die {
+  echo "$0 failed with: $1"
+  exit 1
+}
+
+readonly root_dir="$(cd "$(dirname "$0")" && pwd)"
+
+if ! pacman -Q | grep -qw 'reflector'; then
+  pacman --noconfirm -Sy
+  pacman --noconfirm -S reflector
+fi
+
+cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bkup_$(date +%s) || die "Error backing up /etc/pacman.d/mirrorlist."
+reflector --verbose -l 30 -f 10 -c 'United States' --save /etc/pacman.d/mirrorlist || "Error updating mirrorlist"
